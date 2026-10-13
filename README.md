@@ -11,6 +11,15 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 - Alle 500 Meter nimmt die Verkehrsdichte zu.
 - Nach der Runde einen Spielernamen eingeben und das Ergebnis speichern.
 
+## Winterthurer Kulisse
+
+- HESS-Gelenkbusse mit zwei und Doppelgelenkbusse mit drei getrennten Fahrzeugteilen und gerippten Faltenbälgen, ohne Stromabnehmerstangen.
+- Blaue Haltestellentafeln mit silbernem Rahmen, farbigen Linienfeldern und Winterthurer Namen, unter anderem Feldtal, Schiltwiesen, Technikum und Stadthaus.
+- Ein stilisiertes Pilzdach am Hauptbahnhof ersetzt den dunklen Block am Strassenende.
+- Haltestellen und Wartehäuschen liegen in der Zeichenreihenfolge vor den Hausfassaden und bleiben bis zum Vorbeifahren sichtbar.
+
+Die Kulisse ist spielerisch stilisiert. Vorlagen: [Stadtbus-Fahrzeugpark](https://stadtbus.winterthur.ch/fahrerlebnis/fahrzeugpark), [offizielle Situationspläne](https://stadtbus.winterthur.ch/service/situationsplaene), [Haltestellentafel Feldtal](https://autobusse.startbilder.de/bild/schweiz~kt-zuerich~winterthur/749734/206663---sbw-haltestellenschild---winterthur-feldtal.html) und [Pilzdach am Bahnhofplatz](https://www.nau.ch/ort/winterthur/neue-wartehalle-am-hauptbahnhof-winterthur-eroffnet-67125150). Die Grafiken werden im Canvas gezeichnet; Referenzfotos sind nicht eingebunden.
+
 ## GitHub Pages
 
 Die Dateien werden ohne Build-Schritt aus dem Hauptverzeichnis der Branch `main` veröffentlicht. In den Repository-Einstellungen unter **Pages** die Quelle **Deploy from a branch → main → / (root)** auswählen. Alle Dateipfade sind relativ, damit die Seite auch unter einem Repository-Pfad funktioniert.

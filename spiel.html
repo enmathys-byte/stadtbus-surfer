@@ -218,13 +218,14 @@ function shuffle(a){ for (let i = a.length - 1; i > 0; i--){ const j = (Math.ran
 
 /* ---------- Fahrzeug-Daten (stilisiert) ---------- */
 // Visual references: HESS lighTram 19/25 DC, Stadtbus Winterthur.
-// Distances are game units; collision height and width match the original.
+// Two distinct body sections for Gelenkbus; three for Doppelgelenkbus.
+// Length, width and collision timing remain in the established game units.
 const BUSES = [
-  { name:'HESS lighTram 25 DC', w:.9, h:1.2, L:6.2, joints:[.34,.68], line:'1', dest:'Oberwinterthur', number:'401' },
-  { name:'HESS lighTram 25 DC', w:.9, h:1.2, L:6.2, joints:[.34,.68], line:'1', dest:'Töss', number:'405' },
-  { name:'HESS lighTram 19 DC', w:.9, h:1.2, L:4.2, joints:[.53], line:'2', dest:'Seen', number:'131' },
-  { name:'HESS lighTram 19 DC', w:.9, h:1.2, L:4.2, joints:[.53], line:'3', dest:'Rosenberg', number:'133' },
-  { name:'HESS lighTram 19 DC', w:.9, h:1.2, L:4.2, joints:[.53], line:'5', dest:'Technorama', number:'140' }
+  { name:'HESS Doppelgelenkbus 25 DC', kind:'double', w:.9, h:1.2, L:6.2, joints:[.34,.68], line:'1', dest:'Oberwinterthur', number:'401' },
+  { name:'HESS Doppelgelenkbus 25 DC', kind:'double', w:.9, h:1.2, L:6.2, joints:[.34,.68], line:'1', dest:'Töss', number:'405' },
+  { name:'HESS Gelenkbus 19 DC', kind:'articulated', w:.9, h:1.2, L:4.2, joints:[.53], line:'2', dest:'Seen', number:'131' },
+  { name:'HESS Gelenkbus 19 DC', kind:'articulated', w:.9, h:1.2, L:4.2, joints:[.53], line:'3', dest:'Rosenberg', number:'133' },
+  { name:'HESS Gelenkbus 19 DC', kind:'articulated', w:.9, h:1.2, L:4.2, joints:[.53], line:'5', dest:'Technorama', number:'140' }
 ];
 const CARS = [
   { name:'Kleinwagen',  kind:'hatch', w:.58, h:.5,  L:1.3, colors:['#d93a3a','#3b82c4','#f2c230','#59a96a','#e8e8e8'] },
@@ -274,6 +275,19 @@ const sfx = {
 
 /* ---------- Szene: Gebäude, Haltestellen, Zebrastreifen ---------- */
 const BCOL = ['#d8cbb4','#c9a9a0','#9aa7b0','#c7a56a','#a65d4a','#b9b2a3','#8fa08e','#d9c7a0'];
+// Blue name boards and coloured route panels, after Winterthur stop references.
+const STOP_NAMES = [
+  {name:'Feldtal',lines:[['2','Wülflingen','#c93042'],['22','Schloss','#c93042']]},
+  {name:'Schiltwiesen',lines:[['1','Töss','#343b42'],['5','Dättnau','#45a2cd']]},
+  {name:'Technikum',lines:[['2','Seen','#c93042'],['3','Oberseen','#67a43d']]},
+  {name:'Stadthaus',lines:[['1','Oberwinterthur','#343b42'],['3','Rosenberg','#67a43d']]},
+  {name:'Lindenplatz',lines:[['2','Hauptbahnhof','#c93042'],['2','Seen','#c93042']]},
+  {name:'Gewerbeschule',lines:[['1','Hauptbahnhof','#343b42'],['1','Töss','#343b42']]},
+  {name:'Museumstrasse/HB',lines:[['10',"Bhf. Oberw’thur",'#314c90'],['12','Bruderhaus','#957058']]},
+  {name:'Hauptbahnhof',lines:[['1','Oberwinterthur','#343b42'],['5','Technorama','#45a2cd']]}
+];
+let stopNameIndex=0;
+function makeStop(side,d){const sign=STOP_NAMES[stopNameIndex++%STOP_NAMES.length];return {t:'stop',side,x:side*1.96,d,L:2.1,sign};}
 const AWN = ['#c0392b','#2e6f95','#e8731a','#3c8d5a','#7a3e8e'];
 function addBld(side, d){
   const w = rnd(2.0, 3.2), L = rnd(3, 6.5), h = rnd(3.2, 8.5);
@@ -281,12 +295,13 @@ function addBld(side, d){
   blds.push(b); return b;
 }
 function initScene(){
-  blds = []; stops = []; zebras = [];
+  blds = []; stops = []; zebras = []; stopNameIndex=0;
   for (const side of [-1, 1]){
     let d = -6;
     while (d < 125){ const b = addBld(side, d); d += b.L + (Math.random() < .25 ? rnd(.8, 2) : 0); }
   }
-  stopAcc = rnd(0, 40); zebraAcc = rnd(20, 60);
+  stops.push(makeStop(-1,20),makeStop(1,67),makeStop(-1,112));
+  stopAcc = 0; zebraAcc = rnd(20, 60);
 }
 function updateScene(dt){
   const mv = speed * dt;
@@ -302,7 +317,7 @@ function updateScene(dt){
     while (end < 125){ const b = addBld(side, end + (Math.random() < .25 ? rnd(.8, 2) : 0)); end = b.d + b.L; }
   }
   stopAcc += mv; zebraAcc += mv;
-  if (stopAcc > rnd(70, 110)){ stopAcc = 0; const side = Math.random() < .5 ? -1 : 1; stops.push({ t:'stop', side, x:side * 1.85, d:125, L:1.6 }); }
+  if (stopAcc > rnd(70, 110)){ stopAcc = 0; const side = Math.random() < .5 ? -1 : 1; stops.push(makeStop(side,125)); }
   if (zebraAcc > rnd(100, 150)){ zebraAcc = 0; zebras.push({ d:125, L:1.5 }); }
 }
 
@@ -318,7 +333,7 @@ function drawBox(cx, d, w, y0, h, L, hex, o){
   if (!(o && o.noSide)){
     if (showLeft) poly([fbl, ftl, rtl, rbl], col(hex, .72, fd)); else poly([fbr, ftr, rtr, rbr], col(hex, .72, fd));
   }
-  if (yt < CAMH - 0.05) poly([ftl, ftr, rtr, rtl], col(hex, 1.12, fd));
+  if (!(o && o.noRoof) && yt < CAMH - 0.05) poly([ftl, ftr, rtr, rtl], col(hex, 1.12, fd));
   if (!(o && o.noFront)) poly([fbl, fbr, ftr, ftl], col(hex, 1, fd));
   const xs = showLeft ? xa : xb;
   return {
@@ -365,7 +380,37 @@ function drawSky(){
   ctx.fillStyle = '#a5b4bb';
   ctx.fillRect(tx - 6, HOR - 46, 12, 48);
   ctx.beginPath(); ctx.moveTo(tx - 8, HOR - 46); ctx.lineTo(tx, HOR - 86); ctx.lineTo(tx + 8, HOR - 46); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#7a8388'; ctx.fillRect(0, HOR, W, H - HOR);
+  // Light plaza ground reaches the vanishing point; no dark end-of-road block.
+  ctx.fillStyle = '#c3cdd1'; ctx.fillRect(0, HOR, W, H - HOR);
+}
+// A stylised view of Winterthur HB's broad folded Pilzdach and glazed core.
+// Drawn at the horizon, behind the street scenery, rather than as an obstacle.
+function drawWinterthurHB(){
+  const anchor=proj(0,0,FAR), k=W/480*.82, x=anchor[0], y=anchor[1]+1;
+  ctx.save();ctx.translate(x,y);ctx.scale(k,k);
+  // Pale station facade and the clock at the edge of the bus plaza.
+  ctx.fillStyle='#bcc1bb';ctx.fillRect(-58,-36,116,33);
+  ctx.fillStyle='#e1dfcd';ctx.fillRect(-56,-33,112,29);
+  ctx.fillStyle='#78898c';
+  for(let col=0;col<11;col++){ctx.fillRect(-51+col*10,-27,5,8);ctx.fillRect(-51+col*10,-13,5,8);}
+  // The ticket-office core is narrow, with vertical glass panes.
+  poly([[-9,0],[12,0],[16,-30],[-14,-30]],'#8c9999');
+  poly([[-7,-2],[11,-2],[13,-29],[-10,-29]],'#49606a');
+  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#b8c7c9':'#8ba4ab';ctx.fillRect(-7+i*4,-26,2,23);}
+  // Wide angular canopy, raised along its diagonal ridge (not a round mushroom).
+  poly([[-65,-27],[-21,-58],[63,-35],[66,-24],[-53,-14]],'#9ea8ac');
+  poly([[-65,-27],[-21,-58],[11,-39],[-53,-18]],'#d5dbdc');
+  poly([[-21,-58],[63,-35],[11,-39]],'#c0c9cc');
+  poly([[-53,-18],[11,-39],[66,-24],[4,-15]],'#829398');
+  poly([[-65,-27],[-53,-18],[4,-15],[66,-24],[66,-20],[5,-11],[-52,-14]],'#64777e');
+  ctx.strokeStyle='#b5c1c4';ctx.lineWidth=.6;
+  for(let i=0;i<11;i++){ctx.beginPath();ctx.moveTo(-49+i*10,-17-i*.055);ctx.lineTo(2,-13);ctx.stroke();}
+  ctx.strokeStyle='#edf0ec';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-65,-27);ctx.lineTo(-21,-58);ctx.lineTo(63,-35);ctx.stroke();
+  ctx.fillStyle='#e5e9e2';ctx.fillRect(-27,-6,54,8);
+  ctx.fillStyle='#344b5c';ctx.font='700 6px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('WINTERTHUR HB',0,-2,50);
+  ctx.fillStyle='#60757e';ctx.fillRect(-39,-30,1.5,27);
+  dot(-38.3,-31,4.2,'#f4f3df');ctx.strokeStyle='#405864';ctx.lineWidth=.9;ctx.beginPath();ctx.arc(-38.3,-31,4.2,0,Math.PI*2);ctx.moveTo(-38.3,-31);ctx.lineTo(-38.3,-34);ctx.moveTo(-38.3,-31);ctx.lineTo(-36.5,-30);ctx.stroke();
+  ctx.restore();
 }
 function drawRoad(){
   const gw = ctx.createLinearGradient(0, HOR, 0, H);
@@ -452,24 +497,64 @@ function drawBld(o){
   }
 }
 function drawStop(o){
-  const B = drawBox(o.x, o.d, .4, 0, .8, 1.5, '#7e929c');
-  drawBox(o.x, o.d - .05, .5, .8, .07, 1.6, '#363c42');
-  const sx = o.side * 1.62;
-  drawBox(sx, o.d - .3, .05, 0, 1.25, .05, '#4a4f55', { noSide:true });
-  const p = proj(sx, 1.35, o.d - .3), s = S(o.d - .3), r = .17 * s;
-  if (r > 3 && o.d - .3 > CLIP){
-    dot(p[0], p[1], r, '#ffcc00'); ctx.strokeStyle = '#1d1d1b'; ctx.lineWidth = Math.max(1, r * .14); ctx.stroke();
-    if (r > 8){ ctx.fillStyle = '#1d1d1b'; ctx.font = '700 ' + Math.floor(r * 1.25) + 'px "Barlow Condensed",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('H', p[0], p[1] + 1); }
+  // Shelter stays wholly on the pavement, in front of the building line.
+  const d=o.d, x=o.x;
+  const shelter=drawBox(x,d,.5,0,1.35,1.85,'#8b9fa4',{noSide:true,noFront:true,noRoof:true});
+  if(shelter){
+    // Translucent glass instead of an opaque block.
+    ctx.save();ctx.globalAlpha=.32;sideBand(shelter,.13,1.3,'#c9e8ed',0,1);ctx.restore();
+    for(const z of [d,d+1.72])drawBox(x,z,.055,0,1.35,.06,'#bcc9cd');
+    drawBox(x,d,.63,1.33,.08,1.9,'#6e8188');
+    drawBox(x,d+.25,.28,.36,.09,1.1,'#8b6d51');
   }
+  const signD=d-.18;if(signD<=CLIP+.03)return;
+  const p=proj(o.side*1.78,0,signD),s=S(signD);if(s<1)return;
+  const sign=o.sign||STOP_NAMES[0];
+  ctx.save();ctx.translate(p[0],p[1]);ctx.scale(s,s);
+  // Two stainless-steel uprights, joined by the rounded top of the frame.
+  ctx.lineWidth=.046;ctx.strokeStyle=col('#697e89',1,d);ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-.37,0);ctx.lineTo(-.37,-2.12);ctx.quadraticCurveTo(-.37,-2.24,-.25,-2.24);ctx.lineTo(.25,-2.24);ctx.quadraticCurveTo(.37,-2.24,.37,-2.12);ctx.lineTo(.37,0);ctx.stroke();
+  ctx.lineWidth=.018;ctx.strokeStyle=col('#e0e8e8',1,d);ctx.stroke();
+  ctx.fillStyle=col('#06669c',1,d);ctx.fillRect(-.35,-2.13,.7,.36);
+  ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle='#fff';
+  ctx.font='700 .145px "Barlow Condensed",sans-serif';ctx.fillText(sign.name,-.3,-1.95,.60);
+  sign.lines.forEach((line,i)=>{
+    const y=-1.77+i*.245;ctx.fillStyle=col(line[2],1,d);ctx.fillRect(-.35,y,.7,.236);
+    ctx.fillStyle='#fff';ctx.font='700 .14px "Barlow Condensed",sans-serif';ctx.fillText(line[0],-.30,y+.12,.13);
+    ctx.font='600 .105px "Barlow Condensed",sans-serif';ctx.fillText(line[1],-.13,y+.12,.43);
+  });
+  // Small timetable in its silver case, below the route boards.
+  ctx.fillStyle=col('#c7d1d1',1,d);ctx.fillRect(-.16,-1.1,.32,.47);
+  ctx.fillStyle='#f2f0e0';ctx.fillRect(-.13,-1.07,.26,.40);
+  if(s>18){ctx.fillStyle='#7c959f';for(let i=0;i<7;i++)ctx.fillRect(-.1,-1.02+i*.045,.2,.009);}
+  ctx.restore();
 }
 
 /* ---------- Fahrzeuge ---------- */
+function busSections(sp){
+  const gap=.36, sections=[];let start=0;
+  for(const t of sp.joints){const middle=t*sp.L;sections.push({d:start,L:middle-gap/2-start});start=middle+gap/2;}
+  sections.push({d:start,L:sp.L-start});return sections;
+}
+function drawBellows(o,B,t){
+  // Every fold wraps across both the side wall and the roof: the two/three
+  // separate carriages remain readable even when seen nearly head-on.
+  const middle=o.d+t*o.spec.L, gap=.36, ribs=7;
+  for(let i=ribs-1;i>=0;i--){
+    const d=middle-gap/2+i*gap/ribs;
+    if(d+gap/ribs<=CLIP)continue;
+    const raised=i%2===0;
+    drawBox(o.x,d,o.spec.w+(raised?.018:-.014),.1,raised?1.11:1.07,gap/ribs,raised?'#8a989f':'#35444e');
+  }
+}
 function drawBus(o){
   const sp = o.spec, red = '#ed302e', silver = '#d6dce0';
   ctx.save();
   if (o.ghost) ctx.globalAlpha = .35;
-  const B = drawBox(o.x, o.d, sp.w, .09, sp.h - .09, sp.L, silver, { noFront:true });
+  const B = drawBox(o.x, o.d, sp.w, .09, sp.h - .09, sp.L, silver, { noFront:true,noSide:true,noRoof:true });
   if (!B){ ctx.restore(); return; }
+  const sections=busSections(sp);
+  for(const section of sections.slice().reverse())drawBox(o.x,o.d+section.d,sp.w,.09,sp.h-.09,section.L,silver,{noFront:true});
   const sidePx = Math.abs(B.side(1, 0)[0] - B.side(0, 0)[0]);
   const band = (ya, yb, color, t0=0, t1=1) => sideBand(B, ya, yb, color, t0, t1);
   // Continuous black window band, silver waist and red lower skirt.
@@ -497,11 +582,7 @@ function drawBus(o){
       const p=B.side(t1+.005,.38);
       dot(p[0],p[1],Math.max(.6,S(o.d+sp.L*t1)*.013),'#eacb30');
     }
-    // Silver accordion bellows are visible on both articulated variants.
-    for (const t of sp.joints){
-      band(.08,1.2,'#919ca4',t-.027,t+.027);
-      for (let j=-3;j<=3;j++) band(.1,1.18,j%2?'#56636c':'#c3cbd0',t+j*.007,t+j*.007+.003);
-    }
+
     // Wheels are projected in the visible side plane, so they retain perspective.
     for (const t of (sp.L>5 ? [.13,.43,.7,.92] : [.17,.67,.92])){
       const d=o.d+sp.L*t;
@@ -517,9 +598,10 @@ function drawBus(o){
       wheel(.19,'#20262b'); wheel(.125,'#c7d0d6'); wheel(.035,'#6c7984');
     }
   }
-  // Rooftop battery cabinets; this edition has no trolley poles.
-  for (const t of [.27,.7]){
-    const d=o.d+sp.L*t;
+  for(const t of sp.joints.slice().reverse())drawBellows(o,B,t);
+  // One rooftop cabinet per separate carriage; no trolley poles.
+  for (const section of sections){
+    const d=o.d+section.d+section.L*.35;
     if(d>CLIP) drawBox(o.x,d,.66,1.2,.095,.48,'#b8c3cb');
   }
 
@@ -788,8 +870,15 @@ function drawScene(){
     ctx.translate(rnd(-6, 6) * k, rnd(-4, 4) * k);
   }
   drawSky(); drawRoad();
+  // Facades are the background layer. A nearby facade must never paint over
+  // a pavement stop just because the facade's front has a smaller depth.
+  const facades=blds.filter(b=>b.d<=FAR&&b.d+b.L>CLIP).sort((a,b)=>b.d-a.d);
+  // The station plaza sits in front of the distant city backdrop. Nearby
+  // facades frame the canopy without hiding it behind the whole street.
+  for(const b of facades)if(b.d>=28)drawBld(b);
+  drawWinterthurHB();
+  for(const b of facades)if(b.d<28)drawBld(b);
   items.length = 0;
-  for (const b of blds) items.push(b);
   for (const s of stops) items.push(s);
   for (const o of objs) items.push(o);
   items.sort((a, b) => b.d - a.d);
