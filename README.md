@@ -15,10 +15,10 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 
 - Normale Stadtbusse sowie HESS-Gelenkbusse mit zwei und Doppelgelenkbusse mit drei getrennten Fahrzeugteilen und gerippten Faltenbälgen, ohne Stromabnehmerstangen. Für die Spielschwierigkeit sind die Gelenkbusse exakt doppelt und Doppelgelenkbusse dreimal so lang wie normale Busse (einschliesslich Kollisionslänge).
 - Blaue Haltestellentafeln mit silbernem Rahmen, farbigen Linienfeldern und Winterthurer Namen, unter anderem Feldtal, Schiltwiesen, Technikum und Stadthaus.
-- Ein stilisiertes Pilzdach am Hauptbahnhof ersetzt den dunklen Block am Strassenende. Es liegt hinter allen Häusern im Hintergrund.
+- Das historische Gebäude des Winterthurer Hauptbahnhofs mit zwei dunklen Kuppeln, zentraler Uhr und Rundbogenportalen steht am Strassenende. Es liegt hinter allen Häusern im Hintergrund.
 - Haltestellen und Wartehäuschen liegen in der Zeichenreihenfolge vor den Hausfassaden und bleiben bis zum Vorbeifahren sichtbar.
 
-Die Kulisse ist spielerisch stilisiert. Vorlagen: [Stadtbus-Fahrzeugpark](https://stadtbus.winterthur.ch/fahrerlebnis/fahrzeugpark), [offizielle Situationspläne](https://stadtbus.winterthur.ch/service/situationsplaene), [Haltestellentafel Feldtal](https://autobusse.startbilder.de/bild/schweiz~kt-zuerich~winterthur/749734/206663---sbw-haltestellenschild---winterthur-feldtal.html) und [Pilzdach am Bahnhofplatz](https://www.nau.ch/ort/winterthur/neue-wartehalle-am-hauptbahnhof-winterthur-eroffnet-67125150). Die Grafiken werden im Canvas gezeichnet; Referenzfotos sind nicht eingebunden.
+Die Kulisse ist spielerisch stilisiert. Vorlagen: [Stadtbus-Fahrzeugpark](https://stadtbus.winterthur.ch/fahrerlebnis/fahrzeugpark), [offizielle Situationspläne](https://stadtbus.winterthur.ch/service/situationsplaene), [Haltestellentafel Feldtal](https://autobusse.startbilder.de/bild/schweiz~kt-zuerich~winterthur/749734/206663---sbw-haltestellenschild---winterthur-feldtal.html) und [Bahnhof Winterthur bei der SBB](https://www.sbb.ch/en/travel-information/stations/find-station/winterthur-station.html). Die Grafiken werden im Canvas gezeichnet; Referenzfotos sind nicht eingebunden.
 
 ## GitHub Pages
 

@@ -387,33 +387,61 @@ function drawSky(){
   // Light plaza ground reaches the vanishing point; no dark end-of-road block.
   ctx.fillStyle = '#c3cdd1'; ctx.fillRect(0, HOR, W, H - HOR);
 }
-// A stylised view of Winterthur HB's broad folded Pilzdach and glazed core.
-// Drawn at the horizon, behind the street scenery, rather than as an obstacle.
+// Historic Winterthur station: pale stone, arched entrances, twin dark domes
+// and the clock between the towers. Entirely behind the street facades.
 function drawWinterthurHB(){
-  const anchor=proj(0,0,FAR), k=W/480*.82, x=anchor[0], y=anchor[1]+1;
+  const anchor=proj(0,0,FAR), k=W/480*.38, x=anchor[0], y=anchor[1]+1;
   ctx.save();ctx.translate(x,y);ctx.scale(k,k);
-  // Pale station facade and the clock at the edge of the bus plaza.
-  ctx.fillStyle='#bcc1bb';ctx.fillRect(-58,-36,116,33);
-  ctx.fillStyle='#e1dfcd';ctx.fillRect(-56,-33,112,29);
-  ctx.fillStyle='#78898c';
-  for(let col=0;col<11;col++){ctx.fillRect(-51+col*10,-27,5,8);ctx.fillRect(-51+col*10,-13,5,8);}
-  // The ticket-office core is narrow, with vertical glass panes.
-  poly([[-9,0],[12,0],[16,-30],[-14,-30]],'#8c9999');
-  poly([[-7,-2],[11,-2],[13,-29],[-10,-29]],'#49606a');
-  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#b8c7c9':'#8ba4ab';ctx.fillRect(-7+i*4,-26,2,23);}
-  // Wide angular canopy, raised along its diagonal ridge (not a round mushroom).
-  poly([[-65,-27],[-21,-58],[63,-35],[66,-24],[-53,-14]],'#9ea8ac');
-  poly([[-65,-27],[-21,-58],[11,-39],[-53,-18]],'#d5dbdc');
-  poly([[-21,-58],[63,-35],[11,-39]],'#c0c9cc');
-  poly([[-53,-18],[11,-39],[66,-24],[4,-15]],'#829398');
-  poly([[-65,-27],[-53,-18],[4,-15],[66,-24],[66,-20],[5,-11],[-52,-14]],'#64777e');
-  ctx.strokeStyle='#b5c1c4';ctx.lineWidth=.6;
-  for(let i=0;i<11;i++){ctx.beginPath();ctx.moveTo(-49+i*10,-17-i*.055);ctx.lineTo(2,-13);ctx.stroke();}
-  ctx.strokeStyle='#edf0ec';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-65,-27);ctx.lineTo(-21,-58);ctx.lineTo(63,-35);ctx.stroke();
-  ctx.fillStyle='#e5e9e2';ctx.fillRect(-27,-6,54,8);
-  ctx.fillStyle='#344b5c';ctx.font='700 6px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('WINTERTHUR HB',0,-2,50);
-  ctx.fillStyle='#60757e';ctx.fillRect(-39,-30,1.5,27);
-  dot(-38.3,-31,4.2,'#f4f3df');ctx.strokeStyle='#405864';ctx.lineWidth=.9;ctx.beginPath();ctx.arc(-38.3,-31,4.2,0,Math.PI*2);ctx.moveTo(-38.3,-31);ctx.lineTo(-38.3,-34);ctx.moveTo(-38.3,-31);ctx.lineTo(-36.5,-30);ctx.stroke();
+  // Lower side wings and taller, symmetrical entrance building.
+  ctx.fillStyle='#d5d2bd';ctx.fillRect(-104,-39,208,39);
+  ctx.fillStyle='#dcd8c2';ctx.fillRect(-48,-65,96,65);
+  ctx.fillStyle='#737a7d';ctx.fillRect(-104,-42,208,3);
+  ctx.fillStyle='#dad8c7';ctx.fillRect(-48,-65,96,27);
+  ctx.strokeStyle='#b8baa9';ctx.lineWidth=.7;
+  for(let yy=-37;yy<0;yy+=5){ctx.beginPath();ctx.moveTo(-104,yy);ctx.lineTo(104,yy);ctx.stroke();}
+  // Stone pilasters and the upper storeys of the central facade.
+  for(const xx of [-46,-27,-9,9,27,44]){
+    ctx.fillStyle='#c3c2ae';ctx.fillRect(xx,-63,3.5,40);
+    ctx.fillStyle='#ece8d2';ctx.fillRect(xx,-63,1.1,40);
+  }
+  for(const xx of [-36,-18,0,18,36]){
+    ctx.fillStyle='#8b948f';ctx.fillRect(xx-5,-59,10,10);ctx.fillRect(xx-4,-43,8,12);
+    ctx.fillStyle='#354a52';ctx.fillRect(xx-3.5,-58,7,8);ctx.fillRect(xx-2.8,-41,5.6,9);
+    ctx.fillStyle='#ede8d3';ctx.fillRect(xx-.4,-58,.8,8);ctx.fillRect(xx-5,-44,10,1.7);
+    poly([[xx-5,-30],[xx,-33],[xx+5,-30]],'#b3b5a5');
+  }
+  // Two domed towers, with three arched windows beneath each dome.
+  for(const tx of [-35,35]){
+    ctx.fillStyle='#cfceba';ctx.fillRect(tx-12,-80,24,17);
+    ctx.fillStyle='#646e75';ctx.beginPath();ctx.moveTo(tx-11,-81);ctx.bezierCurveTo(tx-11,-98,tx+11,-98,tx+11,-81);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#929a9d';ctx.lineWidth=.8;
+    for(const offset of [-5,0,5]){ctx.beginPath();ctx.moveTo(tx+offset,-81);ctx.quadraticCurveTo(tx+offset*.6,-91,tx,-94);ctx.stroke();}
+    ctx.fillStyle='#657078';ctx.fillRect(tx-.7,-99,1.4,5);dot(tx,-99,1.2,'#8a969b');
+    ctx.fillStyle='#969d94';ctx.fillRect(tx-14,-82,28,2.5);
+    for(const dx of [-7,0,7]){
+      ctx.fillStyle='#465d64';ctx.beginPath();ctx.moveTo(tx+dx-2.5,-65);ctx.lineTo(tx+dx-2.5,-73);ctx.arc(tx+dx,-73,2.5,Math.PI,0);ctx.lineTo(tx+dx+2.5,-65);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#e9e4d0';ctx.fillRect(tx+dx-.4,-75,.8,10);
+    }
+  }
+  // Curved clock pediment and a small Swiss flag above the middle entrance.
+  ctx.fillStyle='#ceceba';ctx.beginPath();ctx.moveTo(-24,-65);ctx.quadraticCurveTo(-12,-66,-11,-77);ctx.quadraticCurveTo(0,-90,11,-77);ctx.quadraticCurveTo(12,-66,24,-65);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#abb09f';ctx.lineWidth=1.5;ctx.stroke();
+  dot(0,-74,5.8,'#f2eedb');ctx.strokeStyle='#697f85';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,-74,5.8,0,Math.PI*2);ctx.moveTo(0,-74);ctx.lineTo(0,-78);ctx.moveTo(0,-74);ctx.lineTo(3,-73);ctx.stroke();
+  ctx.fillStyle='#7c888d';ctx.fillRect(-.45,-106,.9,24);
+  ctx.fillStyle='#bf4a4a';ctx.fillRect(.5,-104,7,7);ctx.fillStyle='#fff1df';ctx.fillRect(3,-103,2,5);ctx.fillRect(1.5,-101.5,5,2);
+  // Cornices, balcony rail and the large arched doorways at ground level.
+  ctx.fillStyle='#9fa79a';ctx.fillRect(-50,-65,100,2.8);ctx.fillRect(-104,-25,208,2.6);
+  ctx.fillStyle='#e6e0c9';ctx.fillRect(-51,-62.5,102,1.2);ctx.fillRect(-104,-22.5,208,1.4);
+  ctx.fillStyle='#9da79e';for(let xx=-45;xx<=45;xx+=4)ctx.fillRect(xx,-28,1.4,4);
+  for(let xx=-90;xx<=90;xx+=18){
+    ctx.fillStyle='#405762';ctx.beginPath();ctx.moveTo(xx-6,-1);ctx.lineTo(xx-6,-13);ctx.arc(xx,-13,6,Math.PI,0);ctx.lineTo(xx+6,-1);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#8e9b98';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.fillStyle='#899a9f';ctx.fillRect(xx-.5,-18,1,17);ctx.fillRect(xx-5,-11,10,1);
+  }
+  ctx.fillStyle='#a94848';for(const xx of [-72,72])ctx.fillRect(xx-6,-29,12,3);
+  ctx.fillStyle='#e3e3d2';ctx.fillRect(-25,-21,50,6);
+  ctx.fillStyle='#4b626e';ctx.font='700 5px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('WINTERTHUR HB',0,-18,46);
+  ctx.fillStyle='#b2bdba';ctx.fillRect(-106,0,212,2);
   ctx.restore();
 }
 function drawRoad(){
@@ -877,7 +905,7 @@ function drawScene(){
   // Facades are the background layer. A nearby facade must never paint over
   // a pavement stop just because the facade's front has a smaller depth.
   const facades=blds.filter(b=>b.d<=FAR&&b.d+b.L>CLIP).sort((a,b)=>b.d-a.d);
-  // The Pilzdach is a distant landmark: every street facade occludes it.
+  // The station is a distant landmark: every street facade occludes it.
   for(const b of facades)drawBld(b);
   items.length = 0;
   for (const s of stops) items.push(s);
