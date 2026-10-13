@@ -41,6 +41,8 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
 .stat small{font-size:13px;opacity:.85}
 .coinDot{width:12px;height:12px;border-radius:50%;background:#f2c230;box-shadow:inset 0 0 0 3px #c99a12;align-self:center}
 .traffic-info{font-size:14px;line-height:1.45;color:#f3f1ea;background:#0b0b0bcc;border:1px solid #59636d;border-radius:6px;padding:5px 9px}
+.wrench-power{width:180px;padding:7px 9px;border:1px solid #8be1ed;border-radius:6px;background:#102d36ed;color:#e4fcff;font-size:16px}
+.wrench-power[hidden]{display:none}.wrench-power b{float:right;color:#ffc94d}.wrench-track{height:4px;background:#34505a;border-radius:3px;overflow:hidden;margin-top:5px}.wrench-track i{display:block;height:100%;background:#ffd166}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 #lives{display:flex;gap:5px}
 .tix{width:24px;height:15px;border-radius:3px;background:var(--orange);position:relative;box-shadow:0 1px 0 rgba(0,0,0,.35)}
@@ -101,6 +103,7 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
       <div class="sign stat led"><span id="mTxt">0</span><small>m</small></div>
       <div class="sign stat led"><i class="coinDot"></i><span id="cTxt">0</span><small>Batzen</small></div>
       <div class="traffic-info"><span id="levelTxt">Stufe 1 · mehr ab 500 m</span><br><span id="rollTxt">0 Fahrer besiegt</span></div>
+      <div id="wrench-hud" class="wrench-power" hidden>🔧 Werkzeug-Extra <b id="wrench-time">5,0 s</b><div class="wrench-track"><i id="wrench-meter"></i></div></div>
     </div>
     <div class="right">
       <div id="lives" aria-label="Leben"></div>
@@ -125,6 +128,7 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
         <li><span>Links / rechts:</span> Spur wechseln</li>
         <li><span>Hoch:</span> über Autos springen – Busse meiden</li>
         <li><span>Runter / S:</span> rollen, Velo- und Tretboard-Fahrer besiegen</li>
+        <li><span>Schraubenschlüssel:</span> 5 s Fahrer ohne Rollen besiegen</li>
         <li><span>Alle 500 m:</span> mehr Verkehr</li>
       </ul>
       <button class="go" id="bStart">Einsteigen</button>
@@ -236,13 +240,18 @@ const CARS = [
   { name:'Limousine',   kind:'sedan', w:.64, h:.48, L:1.6, colors:['#222831','#9aa3ab','#7b1e2b','#e8e8e8'] },
   { name:'SUV',         kind:'suv',   w:.7,  h:.62, L:1.55,colors:['#1f3b57','#2e2e2e','#b7b7b7','#2f6f4f'] },
   { name:'Lieferwagen', kind:'van',   w:.72, h:.9,  L:1.9, colors:['#f1f1f1','#d9d9d9','#e8d9b0'] },
-  { name:'Taxi',        kind:'sedan', taxi:true, w:.64, h:.5, L:1.6, colors:['#f2c230'] }
+  { name:'Taxi',        kind:'sedan', taxi:true, w:.64, h:.5, L:1.6, colors:['#f2c230'] },
+  { name:'Kombi',       kind:'wagon', w:.66, h:.55, L:1.95, colors:['#427c76','#9baaba','#b74147','#e6e6dc'] },
+  { name:'Sportwagen',  kind:'coupe', w:.72, h:.4, L:1.65, colors:['#e64832','#ecbd36','#366dbc'] },
+  { name:'Cabrio',      kind:'convertible', w:.65, h:.43, L:1.55, colors:['#4aabad','#eee3c9','#db7040'] },
+  { name:'Pickup',      kind:'pickup', w:.74, h:.64, L:2.05, colors:['#4e7155','#973d38','#758696'] },
+  { name:'Minivan',     kind:'minivan', w:.72, h:.76, L:2.05, colors:['#536c9c','#d1c4a9','#744b73'] }
 ];
 const LOW_CARS = CARS.filter(c => c.h <= .65);
 
 /* ---------- Zustand ---------- */
 let state = 'menu';
-let lane = 0, px = 0, py = 0, vy = 0, rollT = 0, runPh = 0;
+let lane = 0, px = 0, py = 0, vy = 0, rollT = 0, runPh = 0, wrenchT = 0;
 let dist = 0, coins = 0, lives = 3, invT = 0, shakeT = 0, flash = 0, speed = 6, roadOff = 0, time = 0;
 let best = 0;
 try { best = +localStorage.getItem('stadtbusSurferTrafficBest') || 0; } catch (e) {}
@@ -251,7 +260,7 @@ let defeated = 0, effects = [];
 let currentRun = '';
 const toHomepage = data => { if(embedded) window.parent.postMessage(data, window.location.origin === 'null' ? '*' : window.location.origin); }; 
 let spawnAcc = 0, nextGap = 20, stopAcc = 0, zebraAcc = 0;
-const JUMP_PEAK = 1.3, JUMP_T = 0.72, ROLL_T = 0.6;
+const JUMP_PEAK = 1.3, JUMP_T = 0.72, ROLL_T = 0.6, WRENCH_T = 5;
 const GRAV = 8 * JUMP_PEAK / (JUMP_T * JUMP_T), JUMP_V = 4 * JUMP_PEAK / JUMP_T;
 
 /* ---------- Ton ---------- */
@@ -270,6 +279,7 @@ function tone(f, dur, type, vol, slideTo){
 }
 const sfx = {
   coin(){ tone(988, .08, 'square', .04); setTimeout(() => tone(1319, .12, 'square', .04), 60); },
+  wrench(){ tone(520, .3, 'triangle', .065, 1560); },
   jump(){ tone(260, .18, 'triangle', .07, 520); },
   roll(){ tone(300, .16, 'triangle', .06, 140); },
   hit(){ tone(140, .35, 'sawtooth', .09, 50); },
@@ -710,46 +720,74 @@ function drawBus(o){
   ctx.restore();
 }
 function drawCar(o){
-  const sp = o.spec, c = o.color;
-  if (o.ghost) ctx.globalAlpha = .35;
-  if (sp.kind === 'van'){
-    const B = drawBox(o.x, o.d, sp.w, .08, sp.h - .08, sp.L, c);
-    if (B){
-      const sidePx = Math.abs(B.side(1, 0)[0] - B.side(0, 0)[0]);
-      if (sidePx > 10) sideBand(B, .52, .8, '#22303a', .02, .16);
-      if (B.pw > 10){
-        fr(B, .1, .5, .9, .84, col('#1e2a34', 1, B.fd));
-        fr(B, 0, .08, 1, .16, '#2b2f33'); fr(B, .3, .17, .7, .3, '#1c1f22');
-        const hy = B.fyw(.28), hr = Math.max(1.2, B.pw * .06);
-        dot(B.fx(.12), hy, hr, '#fff4c2'); dot(B.fx(.88), hy, hr, '#fff4c2');
-        fr(B, .38, .09, .62, .15, '#f1f1f1');
-        fr(B, .06, 0, .18, .16, '#15181b'); fr(B, .82, 0, .94, .16, '#15181b');
-      }
+  const sp=o.spec, c=o.color, by=.07;
+  // Keep cars opaque, including during hit immunity, just like the buses.
+  const solidBox=(x,d,w,y,h,L,color)=>{
+    const B=drawBox(x,d,w,y,h,L,color,{noSide:true,noRoof:true,noFront:true});
+    if(!B)return null;
+    fillBoxSilhouette(B,col(color,.85,B.fd));
+    return drawBox(x,d,w,y,h,L,color);
+  };
+  if(sp.kind==='van'){
+    const B=solidBox(o.x,o.d,sp.w,.08,sp.h-.08,sp.L,c);
+    if(!B)return;
+    sideBand(B,.52,.8,'#22303a',.02,.16);
+    sideBand(B,.34,.39,'#8092a2',.23,.91);
+    if(o.d>=CLIP&&B.pw>10){
+      fr(B,.1,.5,.9,.84,col('#1e2a34',1,B.fd));
+      fr(B,0,.08,1,.16,'#2b2f33');fr(B,.3,.17,.7,.3,'#1c1f22');
+      for(const u of [.12,.88])dot(B.fx(u),B.fyw(.28),Math.max(1.2,B.pw*.06),'#fff4c2');
+      fr(B,.38,.09,.62,.15,'#f1f1f1');
+      fr(B,.06,0,.18,.16,'#15181b');fr(B,.82,0,.94,.16,'#15181b');
     }
-  } else {
-    const bh = sp.h * .52, by = .07;
-    const B = drawBox(o.x, o.d, sp.w, by, bh, sp.L, c);
-    const cw = sp.w * (sp.kind === 'suv' ? .9 : .8);
-    const cL = sp.L * (sp.kind === 'sedan' ? .42 : .55);
-    const cd = o.d + sp.L * (sp.kind === 'hatch' ? .28 : .32);
-    const ch = sp.h * .48, cy = by + bh;
-    const C = drawBox(o.x, cd, cw, cy, ch, cL, c);
-    if (C){
-      if (C.pw > 10) fr(C, .07, cy + ch * .12, .93, cy + ch * .9, col('#1e2a34', 1, C.fd));
-      const sidePx = Math.abs(C.side(1, 0)[0] - C.side(0, 0)[0]);
-      if (sidePx > 8) sideBand(C, cy + ch * .15, cy + ch * .85, '#22303a', .08, .92);
-      if (sp.taxi && C.pw > 8) drawBox(o.x, cd + cL * .3, cw * .38, cy + ch, .09, .22, '#fff2a8');
-    }
-    if (B && B.pw > 10){
-      fr(B, 0, by, 1, by + .06, '#2b2f33');
-      fr(B, .3, by + .07, .7, by + .17, '#1c1f22');
-      const hy = B.fyw(by + .16), hr = Math.max(1.2, B.pw * .06);
-      dot(B.fx(.11), hy, hr, '#fff4c2'); dot(B.fx(.89), hy, hr, '#fff4c2');
-      fr(B, .38, by + .005, .62, by + .055, '#f1f1f1');
-      fr(B, .06, 0, .18, .15, '#15181b'); fr(B, .82, 0, .94, .15, '#15181b');
+    return;
+  }
+  const k=sp.kind, bh=sp.h*.52, cy=by+bh, ch=sp.h-by-bh;
+  const B=solidBox(o.x,o.d,sp.w,by,bh,sp.L,c);
+  if(!B)return;
+  // Longer estate/minivan cabins, low sports roofs and a short pickup cab.
+  const shape={sedan:[.8,.32,.42],hatch:[.8,.28,.55],suv:[.9,.27,.6],wagon:[.84,.25,.69],
+    coupe:[.78,.42,.37],convertible:[.82,.34,.43],pickup:[.89,.23,.32],minivan:[.9,.16,.76]}[k];
+  const [cwRatio,offset,length]=shape, cw=sp.w*cwRatio, cd=o.d+sp.L*offset, cL=sp.L*length;
+  const topPatch=(x,w,d,L,y,color)=>{
+    if(d+L<=CLIP)return;
+    poly([proj(x-w/2,y,Math.max(CLIP,d)),proj(x+w/2,y,Math.max(CLIP,d)),
+      proj(x+w/2,y,d+L),proj(x-w/2,y,d+L)],col(color,1,B.fd));
+  };
+  if(k==='pickup'){
+    // Recessed load bed with raised sides behind the cab.
+    topPatch(o.x,sp.w*.76,o.d+sp.L*.59,sp.L*.36,cy+.002,'#27323a');
+    for(const side of [-1,1])solidBox(o.x+side*sp.w*.45,o.d+sp.L*.57,sp.w*.1,cy,.1,sp.L*.43,c);
+    solidBox(o.x,o.d+sp.L*.94,sp.w,cy,.1,sp.L*.06,c);
+  }
+  if(k==='convertible'){
+    topPatch(o.x,cw,cd,cL,cy+.003,'#18242c');
+    // Two visible seats and a separate windscreen: no roof on the convertible.
+    for(const side of [-1,1])solidBox(o.x+side*cw*.25,cd+cL*.56,cw*.3,cy,.1,cL*.19,'#b68155');
+    const glass=solidBox(o.x,cd,cw,cy,ch,.055,'#cad4d7');
+    if(glass&&cd>=CLIP)fr(glass,.06,cy+.015,.94,cy+ch-.015,'#344f5a');
+  }else{
+    const C=solidBox(o.x,cd,cw,cy,ch,cL,c);
+    if(C){
+      if(cd>=CLIP&&C.pw>8)fr(C,.07,cy+ch*.12,.93,cy+ch*.9,col('#1e2a34',1,C.fd));
+      const panes=k==='wagon'||k==='minivan'?3:k==='pickup'||k==='coupe'?1:2;
+      for(let i=0;i<panes;i++)sideBand(C,cy+ch*.15,cy+ch*.85,'#22303a',.07+i*.88/panes,.07+(i+1)*.88/panes-.04);
+      if(sp.taxi)solidBox(o.x,cd+cL*.3,cw*.38,sp.h,.09,.22,'#fff2a8');
+      if(k==='wagon'||k==='suv')for(const side of [-1,1])solidBox(o.x+side*cw*.37,cd+cL*.1,.025,sp.h,.025,cL*.8,'#535f65');
     }
   }
-  ctx.globalAlpha = 1;
+  if(k==='coupe'){
+    for(const side of [-1,1])topPatch(o.x+side*sp.w*.13,sp.w*.095,o.d,sp.L*.4,cy+.002,'#f2ead1');
+    solidBox(o.x,o.d+sp.L*.89,sp.w*.93,cy+.08,.035,.1,'#222d35');
+  }
+  if(o.d>=CLIP&&B.pw>8){
+    fr(B,0,by,1,by+.055,'#2b2f33');fr(B,.3,by+.07,.7,by+bh*.55,'#1c1f22');
+    if(k==='coupe'||k==='minivan'){
+      fr(B,.06,by+bh*.57,.26,by+bh*.77,'#fff5cf');fr(B,.74,by+bh*.57,.94,by+bh*.77,'#fff5cf');
+    }else for(const u of [.12,.88])dot(B.fx(u),B.fyw(by+bh*.62),Math.max(1,B.pw*.05),'#fff4c2');
+    fr(B,.38,by+.005,.62,by+.045,'#f1f1f1');
+    fr(B,.06,0,.18,.15,'#15181b');fr(B,.82,0,.94,.15,'#15181b');
+  }
 }
 function drawGate(o){
   if (o.ghost) ctx.globalAlpha = .35;
@@ -786,6 +824,24 @@ function drawCoin(o){
   if (r > 7){ ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(p[0] - r * .15, p[1] - r * .25, r * .1 * (.3 + w), r * .3, 0, 0, 6.2832); ctx.fill(); }
 }
 
+// The handle is anchored at (x,y), with the open jaw pointing upwards.
+function drawWrenchIcon(x,y,size,angle=0){
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(size,size);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  const shape=[[-.075,.02],[.075,.02],[.075,-.65],[.2,-.76],[.2,-.97],[.11,-1.08],[.1,-.86],[-.1,-.86],[-.11,-1.08],[-.2,-.97],[-.2,-.76],[-.075,-.65]];
+  ctx.beginPath();ctx.moveTo(...shape[0]);for(const p of shape.slice(1))ctx.lineTo(...p);ctx.closePath();
+  ctx.strokeStyle='#183442';ctx.lineWidth=.07;ctx.stroke();ctx.fillStyle='#dce9ed';ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=.025;ctx.beginPath();ctx.moveTo(-.027,-.08);ctx.lineTo(-.027,-.67);ctx.stroke();
+  dot(0,-.075,.032,'#577580');ctx.restore();
+}
+function drawWrench(o){
+  if(o.got||o.d<-3)return;
+  const p=proj(o.x,o.y,o.d), s=S(o.d)*.43;
+  ctx.save();ctx.fillStyle='#284b59';ctx.strokeStyle='#ffce65';ctx.lineWidth=Math.max(1,s*.06);
+  ctx.beginPath();ctx.arc(p[0],p[1],s*.7,0,Math.PI*2);ctx.fill();ctx.stroke();
+  drawWrenchIcon(p[0]-s*.15,p[1]+s*.43,s,Math.PI*.13);ctx.restore();
+}
+
 /* ---------- Spieler ---------- */
 function drawPlayer(){
   if(invT>0 && Math.floor(time*14)%2===0) return;
@@ -805,6 +861,7 @@ function drawPlayer(){
     ctx.beginPath();ctx.moveTo(-.11*s,-.14*s);ctx.lineTo(.08*s,.05*s);ctx.moveTo(.11*s,-.14*s);ctx.lineTo(-.08*s,.05*s);ctx.stroke();
     ctx.strokeStyle=YELLOW;ctx.lineWidth=.045*s;ctx.beginPath();ctx.moveTo(-.13*s,.1*s);ctx.lineTo(.03*s,.14*s);ctx.stroke();
     dot(0,-.22*s,.095*s,SKIN);dot(0,-.24*s,.085*s,'#4a392d');
+    if(wrenchT>0)drawWrenchIcon(.22*s,0,.39*s,Math.sin(time*12)*.6);
     ctx.restore();return;
   }
   // Red work trousers, reinforced knees, yellow lower-leg panels and black boots.
@@ -820,10 +877,14 @@ function drawPlayer(){
     ctx.fillStyle=DARK;ctx.beginPath();ctx.ellipse(hx+side*.025*s,ankle,.085*s,.046*s,side*.1,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#0d141a';ctx.fillRect(hx-.065*s,ankle+.021*s,.15*s,.025*s);
   }
+  let wrenchHand=null;
   // Grey short sleeves and exposed forearms ending in black work gloves.
   for(const side of [-1,1]){
     const ph=side>0?-sw:sw;
-    const ex=cx+side*.215*s, ey=fy-.41*s+(air?-.11*s:ph*.065*s);
+    const waving=wrenchT>0&&side===1, wave=Math.sin(time*12);
+    const ex=cx+(waving?.31+.055*wave:side*.215)*s;
+    const ey=waving?fy-(.70+.07*Math.cos(time*12))*s:fy-.41*s+(air?-.11*s:ph*.065*s);
+    if(waving)wrenchHand=[ex,ey,reduceMotion?.25:wave*.65];
     const shoulder=[cx+side*.16*s,fy-.57*s];
     const elbow=[cx+side*.215*s,(fy-.5*s+ey)/2];
     ctx.strokeStyle=SHIRT;ctx.lineWidth=.105*s;ctx.beginPath();ctx.moveTo(...shoulder);ctx.lineTo(...elbow);ctx.stroke();
@@ -849,6 +910,7 @@ function drawPlayer(){
   ctx.fillStyle='#4a392d';ctx.beginPath();ctx.ellipse(cx,fy-.76*s,.113*s,.1*s,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#604a35';ctx.beginPath();ctx.ellipse(cx-.025*s,fy-.80*s,.068*s,.035*s,-.3,0,Math.PI*2);ctx.fill();
   dot(cx-.105*s,fy-.725*s,.023*s,SKIN);dot(cx+.105*s,fy-.725*s,.023*s,SKIN);
+  if(wrenchHand)drawWrenchIcon(wrenchHand[0],wrenchHand[1],s*.43,wrenchHand[2]);
   ctx.restore();
 }
 function drawRider(o){
@@ -907,7 +969,7 @@ function drawDefeatEffects(){
       ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);ctx.stroke();
     }
     ctx.textAlign='center';ctx.font='700 '+Math.max(14,s*.14)+'px "Barlow Condensed",sans-serif';
-    ctx.fillText('WEGGEROLLT!',p[0],p[1]-.23*s-t*.18*s);ctx.restore();
+    ctx.fillText(effect.label,p[0],p[1]-.23*s-t*.18*s);ctx.restore();
   }
 }
 
@@ -947,6 +1009,7 @@ function drawScene(){
       case 'gate': drawGate(it); break;
       case 'barrier': drawBarrier(it); break;
       case 'coin': drawCoin(it); break;
+      case 'wrench': drawWrench(it); break;
     }
   }
   ctx.restore();
@@ -967,32 +1030,37 @@ function makeObj(kind, ln, d, low){
 function difficultyAt(metres){
   const tier=Math.floor(Math.max(0,metres)/500);
   const pressure=1-1/(1+tier*.25);
-  return {tier,secondChance:.5+.4*pressure,safeChance:.3+.2*pressure,
-    gapMin:1.15-.65*pressure,gapJitter:.45-.25*pressure,coinOnly:.18-.12*pressure};
+  return {tier,secondChance:.72+.25*pressure,safeChance:.40+.16*pressure,
+    gapMin:.78-.28*pressure,gapJitter:.30-.18*pressure,coinOnly:.10-.07*pressure};
 }
 function pickKind(){
   const r=Math.random();
-  if(r<.34)return 'bus';
-  if(r<.60)return 'car';
-  if(r<.76)return 'bicycle';
-  if(r<.90)return 'scooter';
-  return r<.95?'gate':'barrier';
+  if(r<.38)return 'bus';
+  if(r<.84)return 'car';
+  if(r<.89)return 'bicycle';
+  if(r<.94)return 'scooter';
+  return r<.97?'gate':'barrier';
 }
+const isCollectible=o=>o.t==='coin'||o.t==='wrench';
 function coinLine(ln,d0,len,mode){
-  const n=Math.max(4,Math.floor(len/.9));
+  const n=Math.max(4,Math.floor(len/.9)), trail=[];
   for(let i=0;i<n;i++){
     const d=d0+i*.9;
     // Enforce one lane per depth band across every active coin trail, not only
     // the current row. This also prevents overlaps between consecutive rows.
-    if(objs.some(o=>o.t==='coin' && !o.got && o.x!==ln && Math.abs(o.d-d)<.85))continue;
+    if(objs.some(o=>isCollectible(o) && !o.got && o.x!==ln && Math.abs(o.d-d)<.85))continue;
     const y=mode==='arc'?.5+.85*Math.sin(Math.PI*i/(n-1)):mode==='low'?.25:.5;
-    objs.push({t:'coin',x:ln,d,L:0,y,got:false});
+    const coin={t:'coin',x:ln,d,L:0,y,got:false};
+    objs.push(coin);trail.push(coin);
   }
+  // A rare replacement, never an extra object beside the coin. Only one
+  // uncollected wrench can be on the road at a time.
+  if(trail.length&&wrenchT<=0&&!objs.some(o=>o.t==='wrench'&&!o.got)&&Math.random()<.08)pick(trail).t='wrench';
 }
-function spawnRow(){
+function spawnRow(forceTraffic=false){
   const vObj=speed*1.45, difficulty=difficultyAt(dist), lanes=[-1,0,1];
   let rowL=6, coinEnd=0;
-  if(Math.random()<difficulty.coinOnly){
+  if(!forceTraffic&&Math.random()<difficulty.coinOnly){
     // A single readable trail rather than simultaneous side-by-side trails.
     coinLine(pick(lanes),SPAWN_D,7,'flat');coinEnd=7;
   }else{
@@ -1002,7 +1070,8 @@ function spawnRow(){
     for(let k=0;k<n;k++)plan[others[k]]=pickKind();
     let safeKind=null;
     if(Math.random()<difficulty.safeChance){
-      safeKind=pick(['gate','barrier','car','bicycle','scooter']);plan[safe]=safeKind;
+      const r=Math.random();
+      safeKind=r<.70?'car':r<.80?'bicycle':r<.90?'scooter':r<.95?'gate':'barrier';plan[safe]=safeKind;
     }
     rowL=0;
     for(let i=0;i<3;i++){
@@ -1036,7 +1105,7 @@ function setLives(){
 function showRecord(){ $('recMenu').textContent = best > 0 ? 'Rekord: ' + best + ' m' : ''; }
 function resetRun(){
   ptr = null;
-  lane = 0; px = 0; py = 0; vy = 0; rollT = 0; runPh = 0;
+  lane = 0; px = 0; py = 0; vy = 0; rollT = 0; runPh = 0; wrenchT = 0;
   dist = 0; coins = 0; lives = 3; invT = 0; shakeT = 0; flash = 0; speed = 9;
   objs = []; effects = []; defeated = 0; spawnAcc = 0; nextGap = 22;
   mTxt.textContent = 0; cTxt.textContent = 0; updateTrafficHUD();
@@ -1047,7 +1116,7 @@ function startGame(){
   currentRun=crypto.randomUUID();
   $('save-score').disabled=false;$('save-score').textContent='In Bestenliste eintragen';$('score-status').textContent='';
   toHomepage({type:'surfer-run-start',runId:currentRun});
-  state = 'play';
+  state = 'play'; nextGap=spawnRow(true);
   menu.hidden = true; overPanel.hidden = true; pausePanel.hidden = true; hud.hidden = false;
   hint.hidden = false; hint.classList.remove('fade');
   setTimeout(() => hint.classList.add('fade'), 3800);
@@ -1064,7 +1133,7 @@ function resumeGame(){
   state = 'play'; pausePanel.hidden = true;
 }
 function gameOver(){
-  state = 'over'; sfx.over();
+  state = 'over'; wrenchT=0; updateTrafficHUD(); sfx.over();
   const m = Math.floor(dist);
   if (m > best){ best = m; try { localStorage.setItem('stadtbusSurferTrafficBest', String(best)); } catch (e) {} }
   toHomepage({type:'surfer-run-end',runId:currentRun,distance:m,coins,defeated});
@@ -1084,10 +1153,13 @@ function updateTrafficHUD(){
   const tier=difficultyAt(dist).tier;
   $('levelTxt').textContent='Stufe '+(tier+1)+' · mehr ab '+((tier+1)*500)+' m';
   $('rollTxt').textContent=defeated+' Fahrer besiegt';
+  $('wrench-hud').hidden=wrenchT<=0;
+  $('wrench-time').textContent=(Math.ceil(wrenchT*10)/10).toFixed(1).replace('.',',')+' s';
+  $('wrench-meter').style.width=(wrenchT/WRENCH_T*100)+'%';
 }
-function defeatRider(o){
+function defeatRider(o,withWrench=false){
   o.defeated=true;o.ghost=true;defeated++;
-  effects.push({x:o.x,life:.5});
+  effects.push({x:o.x,life:.5,label:withWrench?'WEGGEFUCHTELT!':'WEGGEROLLT!'});
   tone(640,.12,'triangle',.045,1200);
 }
 function act(a){
@@ -1125,6 +1197,7 @@ function update(dt){
       if (py <= 0){ py = 0; vy = 0; }
     }
     if (rollT > 0) rollT -= dt;
+    wrenchT=Math.max(0,wrenchT-dt);
     if (invT > 0) invT -= dt;
     runPh += dt * (8 + speed * .5);
     spawnAcc += vObj * dt;
@@ -1136,17 +1209,22 @@ function update(dt){
   if (!playing) return;
 
   const ph = rollT > 0 ? .4 : .75;
-  for (const o of objs){
-    if (o.t === 'coin'){
-      if (o.got) continue;
-      if (o.d > .5 || o.d + step < -.5) continue;
-      if (Math.abs(o.x - px) < .45 && Math.abs(o.y - (py + ph / 2)) < .6){ o.got = true; coins++; sfx.coin(); }
-      continue;
+  // Collect first, so a wrench in front of a rider works in the same frame
+  // regardless of the order in which the row was generated or drawn.
+  for(const o of objs){
+    if(!isCollectible(o)||o.got||o.d>.5||o.d+step<-.5)continue;
+    if(Math.abs(o.x-px)<.45&&Math.abs(o.y-(py+ph/2))<.6){
+      o.got=true;
+      if(o.t==='wrench'){wrenchT=WRENCH_T;sfx.wrench();}
+      else{coins++;sfx.coin();}
     }
-    if (o.ghost || o.defeated) continue;
+  }
+  for (const o of objs){
+    if (isCollectible(o)||o.ghost||o.defeated) continue;
     if (o.d > .3 || o.d + o.L + step < -.3) continue;
     if (Math.abs(o.x - px) > o.w / 2 + .15) continue;
-    if ((o.t === 'bicycle' || o.t === 'scooter') && rollT > 0 && py <= .12){ defeatRider(o); continue; }
+    const wrenchHit=wrenchT>0&&py<o.top;
+    if ((o.t === 'bicycle' || o.t === 'scooter') && (wrenchHit||(rollT>0&&py<=.12))){ defeatRider(o,wrenchHit); continue; }
     const hit = o.t === 'gate' ? (py < .72 && py + ph > .5) : py < o.top;
     if (!hit) continue;
     if (invT > 0) o.ghost = true; else crash(o);

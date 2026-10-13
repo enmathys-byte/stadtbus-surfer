@@ -8,7 +8,9 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 - Leertaste: springen. P: Pause.
 - Auf dem Handy im Spielfeld in die entsprechende Richtung wischen. Jeder Wisch löst genau eine Aktion aus; auch ein weiter Wisch wechselt nur eine Spur.
 - Velos und Tretboard-Fahrer werden durch Rollen besiegt.
-- Alle 500 Meter nimmt die Verkehrsdichte zu.
+- Ein seltener Schraubenschlüssel ersetzt einen Batzen. Nach dem Einsammeln schwingt der Mechaniker das Werkzeug 5 Spielsekunden und besiegt Velos und Tretboard-Fahrer auch ohne Rollen. Die Anzeige zählt die Restzeit herunter; Pausen halten sie an. Autos und Busse bleiben gefährlich.
+- Dichterer Verkehr bereits ab dem Start, mit deutlich mehr Autos und Bussen als Velos und Tretboards. Alle 500 Meter nimmt die Verkehrsdichte weiter zu.
+- Zehn Automodelle: Kleinwagen, Limousine, SUV, Lieferwagen, Taxi, Kombi mit Dachreling, Sportwagen mit Streifen und Heckspoiler, Cabrio mit offenen Sitzen, Pickup mit Ladefläche und Minivan.
 - Nach der Runde einen Spielernamen eingeben und das Ergebnis speichern.
 
 ## Winterthurer Kulisse
