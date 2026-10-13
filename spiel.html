@@ -333,16 +333,19 @@ function drawBox(cx, d, w, y0, h, L, hex, o){
   const fbl = proj(xa, y0, dF), fbr = proj(xb, y0, dF), ftl = proj(xa, yt, dF), ftr = proj(xb, yt, dF);
   const rbl = proj(xa, y0, dR), rbr = proj(xb, y0, dR), rtl = proj(xa, yt, dR), rtr = proj(xb, yt, dR);
   const showLeft = cx > camX;
+  const sideVisible = camX < xa || camX > xb;
   const fd = d > 0 ? d : 0;
-  if (!(o && o.noSide)){
+  if (sideVisible && !(o && o.noSide)){
     if (showLeft) poly([fbl, ftl, rtl, rbl], col(hex, .72, fd)); else poly([fbr, ftr, rtr, rbr], col(hex, .72, fd));
   }
   if (!(o && o.noRoof) && yt < CAMH - 0.05) poly([ftl, ftr, rtr, rtl], col(hex, 1.12, fd));
   if (!(o && o.noFront)) poly([fbl, fbr, ftr, ftl], col(hex, 1, fd));
   const xs = showLeft ? xa : xb;
   return {
-    fbl, fbr, ftl, ftr, pw:fbr[0] - fbl[0], ph:fbl[1] - ftl[1], showLeft, xs, dF, dR, y0, h, fd,
-    side:(t, yw) => proj(xs, yw, dF + (dR - dF) * t),
+    fbl, fbr, ftl, ftr, rbl, rbr, rtl, rtr, pw:fbr[0] - fbl[0], ph:fbl[1] - ftl[1], showLeft, sideVisible, xs, dF, dR, y0, h, fd,
+    // Preserve each detail's world position as the front crosses the camera.
+    // Clipping must trim it, not stretch the remaining windows along the bus.
+    side:(t, yw) => proj(xs, yw, Math.max(CLIP, d + L * t)),
     fx:u => fbl[0] + (fbr[0] - fbl[0]) * u,
     fyw:yw => fbl[1] + (ftl[1] - fbl[1]) * ((yw - y0) / h)
   };
@@ -353,6 +356,7 @@ function fr(B, u0, ya, u1, yb, fill){
   ctx.fillStyle = fill; ctx.fillRect(x0, Math.min(y1, y2), x1 - x0, Math.abs(y1 - y2));
 }
 function sideBand(B, ya, yb, hex, t0, t1, k){
+  if(!B.sideVisible)return;
   poly([B.side(t0, ya), B.side(t0, yb), B.side(t1, yb), B.side(t1, ya)], col(hex, k || .72, B.fd));
 }
 function dot(x, y, r, fill){ ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); }
@@ -487,14 +491,18 @@ function drawRoad(){
 /* ---------- Gebäude & Haltestelle ---------- */
 function drawBld(o){
   const B = drawBox(o.x, o.d, o.w, 0, o.h, o.L, o.color);
-  if (!B || B.pw < 24) return;
+  if (!B) return;
   const dd = o.d > 0 ? o.d : 0;
+  const fade = size => Math.max(0, Math.min(1, (size - .2) / 1.2));
   // Schaufenster mit Markise
-  if (B.pw > 40){
+  if (o.d >= CLIP){
+    ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(B.pw-10)/35));
     fr(B, .08, .1, .92, .75, col('#2b3640', 1, dd));
     fr(B, .06, .75, .94, .98, col(o.awn, 1, dd));
+    ctx.restore();
   }
   const cols = Math.max(2, Math.floor(o.w / .6)), rows = Math.floor(o.h / .85);
+  ctx.save();ctx.globalAlpha=o.d>=CLIP?fade(B.pw*.56/cols):0;
   ctx.fillStyle = col('#34414c', 1, dd); ctx.beginPath();
   const lit = [];
   for (let r = 1; r < rows; r++){
@@ -509,11 +517,12 @@ function drawBld(o){
   }
   ctx.fill();
   if (lit.length){ ctx.fillStyle = col('#f2c968', 1, dd); ctx.beginPath(); for (const q of lit) ctx.rect(q[0], q[1], q[2], q[3]); ctx.fill(); }
+  ctx.restore();
   // Fenster an der Strassenseite
-  if (o.d < 60){
-    const sp = Math.abs(B.side(1, 0)[0] - B.side(0, 0)[0]);
-    if (sp > 14){
+  {
       const nc = Math.max(2, Math.floor(o.L / .85));
+      const detailSize=Math.abs(B.side(.75/nc,0)[0]-B.side(.25/nc,0)[0]);
+      ctx.save();ctx.globalAlpha=fade(detailSize);
       ctx.fillStyle = col('#34414c', .75, dd); ctx.beginPath();
       for (let r = 1; r < rows; r++){
         const ya = r * .85 + .22, yb = ya + .45;
@@ -525,7 +534,7 @@ function drawBld(o){
         }
       }
       ctx.fill();
-    }
+      ctx.restore();
   }
 }
 function drawStop(o){
@@ -563,6 +572,15 @@ function drawStop(o){
 }
 
 /* ---------- Fahrzeuge ---------- */
+function fillBoxSilhouette(B,color){
+  // One opaque silhouette under the faces avoids antialiasing cracks where
+  // separately painted side/roof polygons and bellows meet.
+  const points=[B.fbl,B.fbr,B.ftl,B.ftr,B.rbl,B.rbr,B.rtl,B.rtr].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+  const half=list=>{const out=[];for(const point of list){while(out.length>1&&cross(out[out.length-2],out[out.length-1],point)<=0)out.pop();out.push(point);}return out;};
+  const lower=half(points),upper=half(points.slice().reverse());lower.pop();upper.pop();
+  poly(lower.concat(upper),color);
+}
 function busSections(sp){
   const gap=.36, sections=[];let start=0;
   for(const t of sp.joints){const middle=t*sp.L;sections.push({d:start,L:middle-gap/2-start});start=middle+gap/2;}
@@ -579,63 +597,63 @@ function drawBellows(o,B,t){
     drawBox(o.x,d,o.spec.w+(raised?.018:-.014),.1,raised?1.11:1.07,gap/ribs,raised?'#8a989f':'#35444e');
   }
 }
-function drawBus(o){
-  const sp = o.spec, red = '#ed302e', silver = '#d6dce0';
-  ctx.save();
-  if (o.ghost) ctx.globalAlpha = .35;
-  const B = drawBox(o.x, o.d, sp.w, .09, sp.h - .09, sp.L, silver, { noFront:true,noSide:true,noRoof:true });
-  if (!B){ ctx.restore(); return; }
-  const sections=busSections(sp);
-  for(const section of sections.slice().reverse())drawBox(o.x,o.d+section.d,sp.w,.09,sp.h-.09,section.L,silver,{noFront:true});
-  const sidePx = Math.abs(B.side(1, 0)[0] - B.side(0, 0)[0]);
-  const band = (ya, yb, color, t0=0, t1=1) => sideBand(B, ya, yb, color, t0, t1);
-  // Continuous black window band, silver waist and red lower skirt.
-  if (sidePx > 4){
-    band(.09, .22, red);
-    band(.48, .98, '#101c25');
-    band(.99, 1.02, '#f1f3f3');
-    band(1.02, 1.2, silver);
-    band(1.02, 1.2, red, 0, .095);
-    const n = sections.length * 8;
-    for (let i=0; i<n; i++){
-      const t0=(i+.06)/n, t1=(i+.94)/n;
-      band(.55, .94, '#283a44', t0, t1);
-      band(.88, .92, '#637780', t0, t1);
-      band(.5, .98, '#a1acb2', (i+.97)/n, (i+1)/n);
+function drawBusSection(o, section){
+  const sp=o.spec, d0=o.d+section.d;
+  // Closed, opaque carriage. Its own details and roof equipment are drawn
+  // before the next, nearer carriage, so none can float over that body.
+  const B=drawBox(o.x,d0,sp.w,.09,sp.h-.09,section.L,'#d6dce0');
+  if(!B)return;
+  if(B.sideVisible){
+    const band=(ya,yb,color,t0=0,t1=1)=>sideBand(B,ya,yb,color,t0,t1);
+    band(.09,.22,'#ed302e');band(.48,.98,'#101c25');
+    band(.99,1.02,'#f1f3f3');
+    if(section.d===0)band(1.02,1.2,'#ed302e',0,.1);
+    for(let i=0;i<8;i++){
+      band(.55,.94,'#283a44',(i+.06)/8,(i+.94)/8);
+      band(.88,.92,'#637780',(i+.06)/8,(i+.94)/8);
+      band(.5,.98,'#a1acb2',(i+.97)/8,(i+1)/8);
     }
-    // Passenger doors with light frames and their small yellow request buttons.
-    for (const t0 of (sp.joints.length===2 ? [.025,.22,.43,.62,.83] : sp.joints.length===1 ? [.025,.26,.62,.83] : [.04,.62])){
-      const t1=Math.min(.98,t0+.08);
+    for(const t0 of [.04,.66]){
+      const t1=t0+.13;
       band(.11,.98,'#10171d',t0,t1);
-      band(.12,.96,'#b6c1c6',t0,t0+.005);
-      band(.12,.96,'#b6c1c6',t1-.005,t1);
-      band(.14,.94,'#98a9b0',(t0+t1)/2-.002,(t0+t1)/2+.002);
+      band(.12,.96,'#b6c1c6',t0,t0+.009);band(.12,.96,'#b6c1c6',t1-.009,t1);
+      band(.14,.94,'#98a9b0',(t0+t1)/2-.004,(t0+t1)/2+.004);
       band(.27,.31,'#dce3e5',t0,t1);
-      const p=B.side(t1+.005,.38);
-      dot(p[0],p[1],Math.max(.6,S(o.d+sp.L*t1)*.013),'#eacb30');
+      const buttonD=d0+section.L*(t1+.008);
+      if(buttonD>=CLIP){const p=B.side(t1+.008,.38);dot(p[0],p[1],Math.max(.6,S(buttonD)*.013),'#eacb30');}
     }
-
-    // Wheels are projected in the visible side plane, so they retain perspective.
-    for (const t of (sp.joints.length===2 ? [.13,.43,.7,.92] : sp.joints.length===1 ? [.17,.67,.92] : [.17,.82])){
-      const d=o.d+sp.L*t;
-      if (d<CLIP+.25) continue;
-      const wheel=(radius,color) => {
+    const wheels=sp.joints.length===2?[.13,.43,.7,.92]:sp.joints.length===1?[.17,.67,.92]:[.17,.82];
+    for(const t of wheels){
+      const offset=sp.L*t, d=o.d+offset;
+      if(offset<section.d||offset>section.d+section.L||d<CLIP+.25)continue;
+      const wheel=(radius,color)=>{
         const pts=[];
-        for(let i=0;i<24;i++){
-          const a=i*Math.PI/12;
-          pts.push(proj(B.xs,.18+Math.sin(a)*radius,d+Math.cos(a)*radius));
-        }
+        for(let i=0;i<24;i++){const a=i*Math.PI/12;pts.push(proj(B.xs,.18+Math.sin(a)*radius,d+Math.cos(a)*radius));}
         poly(pts,col(color,1,B.fd));
       };
-      wheel(.19,'#20262b'); wheel(.125,'#c7d0d6'); wheel(.035,'#6c7984');
+      wheel(.19,'#20262b');wheel(.125,'#c7d0d6');wheel(.035,'#6c7984');
     }
   }
-  for(const t of sp.joints.slice().reverse())drawBellows(o,B,t);
-  // One rooftop cabinet per separate carriage; no trolley poles.
-  for (const section of sections){
-    const d=o.d+section.d+section.L*.35;
-    if(d>CLIP) drawBox(o.x,d,.66,1.2,.095,.48,'#b8c3cb');
+  // A cabinet belongs to this carriage, not to a separate topmost layer.
+  const cabinetD=d0+section.L*.35;
+  if(cabinetD+.48>CLIP)drawBox(o.x,cabinetD,.66,1.2,.095,.48,'#b8c3cb');
+}
+function drawBus(o){
+  const sp=o.spec, red='#ed302e';
+  ctx.save();ctx.globalAlpha=1;
+  // Solid inner shell also seals the joints and the rounded nose corners.
+  // Collision immunity uses o.ghost, but never makes the body transparent.
+  const B=drawBox(o.x,o.d,sp.w,.09,sp.h-.09,sp.L,'#52616a',{noFront:true,noSide:true,noRoof:true});
+  if(!B){ctx.restore();return;}
+  fillBoxSilhouette(B,col('#52616a',1,B.fd));
+  const sections=busSections(sp);
+  for(let i=sections.length-1;i>=0;i--){
+    drawBusSection(o,sections[i]);
+    if(i>0)drawBellows(o,B,sp.joints[i-1]);
   }
+  // The nose is fixed to the actual front; do not drag it along the near
+  // clipping plane after a long bus has already driven past the camera.
+  if(o.d<CLIP){ctx.restore();return;}
 
   // Rounded red HESS nose; a tall, dark, gently tapered windscreen.
   const fx=B.fx, fy=B.fyw;
@@ -895,6 +913,10 @@ function drawDefeatEffects(){
 
 /* ---------- Szene zeichnen ---------- */
 const items = [];
+// Parallel, disjoint lanes occlude from the camera outwards. Sorting long
+// buses only by their noses lets an outer lane paint over an inner bus tail.
+// Within a lane, distance still decides the order (coins, vehicles, player).
+const roadPaintOrder=(a,b)=>Math.abs(b.x-camX)-Math.abs(a.x-camX)||b.d-a.d;
 function drawScene(){
   ctx.save();
   if (shakeT > 0 && !reduceMotion){
@@ -910,16 +932,16 @@ function drawScene(){
   items.length = 0;
   for (const s of stops) items.push(s);
   for (const o of objs) items.push(o);
-  items.sort((a, b) => b.d - a.d);
-  let pd = false;
+  items.push({t:'player',x:px,d:0});
+  items.sort(roadPaintOrder);
   for (const it of items){
     if (it.d > FAR) continue;
-    if (!pd && it.d <= 0){ drawPlayer(); pd = true; }
     if (it.d + (it.L || 0) <= CLIP) continue;
     switch (it.t){
       case 'bld': drawBld(it); break;
       case 'stop': drawStop(it); break;
       case 'bus': drawBus(it); break;
+      case 'player': drawPlayer(); break;
       case 'car': drawCar(it); break;
       case 'bicycle': case 'scooter': drawRider(it); break;
       case 'gate': drawGate(it); break;
@@ -927,7 +949,6 @@ function drawScene(){
       case 'coin': drawCoin(it); break;
     }
   }
-  if (!pd) drawPlayer();
   ctx.restore();
   drawDefeatEffects();
   if (flash > 0){ ctx.fillStyle = 'rgba(255,60,40,' + Math.min(.4, flash * .4) + ')'; ctx.fillRect(0, 0, W, H); }

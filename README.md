@@ -17,6 +17,8 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 - Blaue Haltestellentafeln mit silbernem Rahmen, farbigen Linienfeldern und Winterthurer Namen, unter anderem Feldtal, Schiltwiesen, Technikum und Stadthaus.
 - Das historische Gebäude des Winterthurer Hauptbahnhofs mit zwei dunklen Kuppeln, zentraler Uhr und Rundbogenportalen steht am Strassenende. Es liegt hinter allen Häusern im Hintergrund.
 - Haltestellen und Wartehäuschen liegen in der Zeichenreihenfolge vor den Hausfassaden und bleiben bis zum Vorbeifahren sichtbar.
+- Busse haben eine geschlossene, deckende Silhouette. Fahrzeugteile, Gelenke und Dachaufbauten werden räumlich geordnet; auch nach einem Treffer bleiben die Buskörper undurchsichtig. Bereits vorbeigefahrene Fronten werden nicht an die Kamera verschoben.
+- Hausfenster werden bis in die Ferne gezeichnet. Kleine Details blenden sich anhand ihrer sichtbaren Grösse sanft ein, ohne die früheren abrupten Entfernungsgrenzen.
 
 Die Kulisse ist spielerisch stilisiert. Vorlagen: [Stadtbus-Fahrzeugpark](https://stadtbus.winterthur.ch/fahrerlebnis/fahrzeugpark), [offizielle Situationspläne](https://stadtbus.winterthur.ch/service/situationsplaene), [Haltestellentafel Feldtal](https://autobusse.startbilder.de/bild/schweiz~kt-zuerich~winterthur/749734/206663---sbw-haltestellenschild---winterthur-feldtal.html) und [Bahnhof Winterthur bei der SBB](https://www.sbb.ch/en/travel-information/stations/find-station/winterthur-station.html). Die Grafiken werden im Canvas gezeichnet; Referenzfotos sind nicht eingebunden.
 
