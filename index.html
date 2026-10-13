@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#161e21">
+  <meta name="description" content="Stadtbus Surfer 3: Durch Winterthur laufen, Busse meiden und die gemeinsame Bestenliste erobern. Direkt im Browser spielen.">
+  <title>Stadtbus Surfer — Winterthur, deine Strecke.</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#spiel">Direkt zum Spiel</a>
+  <header class="topbar wrap">
+    <a class="brand" href="#start" aria-label="Stadtbus Surfer Startseite"><span class="line-number">3</span><span>STADTBUS<br><b>SURFER</b></span></a>
+    <nav aria-label="Hauptnavigation"><a href="#spiel">Spielen</a><a href="#bestenliste">Bestenliste <span>↗</span></a><a href="#steuerung">So geht’s</a></nav>
+    <span class="city-label">WINTERTHUR, CH <i></i></span>
+  </header>
+  <main id="start">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="intro">
+        <p class="eyebrow"><span class="live-dot"></span> VERSION 03 · MEHR VERKEHR</p>
+        <h1 id="hero-title">DEINE STADT.<br>DEINE <em>STRECKE.</em><br>DEIN REKORD.</h1>
+        <p class="lead">Die nächste Haltestelle? Dein Highscore.</p>
+        <p class="description">Als Werkstattmechaniker durch Winterthur: weiche den Bussen aus, rolle Velos und Tretboards weg und sammle so viele Batzen wie möglich.</p>
+        <a class="primary" href="#spiel" id="play-link">Ab auf die Strasse <span>↗</span></a>
+        <div class="route" aria-label="Alle 500 Meter wird der Verkehr dichter">
+          <p class="eyebrow">MIT JEDEM HALT WIRD’S WILDER.</p>
+          <ol><li><b>0 m</b><span>Einsteigen</span></li><li><b>500 m</b><span>Mehr los</span></li><li><b>1000 m</b><span>Rushhour</span></li><li><b>…</b><span>Weiter so!</span></li></ol>
+        </div>
+        <p class="small-note">3 Leben. 3 Spuren. Wie weit kommst du?</p>
+      </div>
+      <div class="arcade" id="spiel">
+        <div class="arcade-top"><span><i></i> NÄCHSTER HALT: REKORD</span><button id="fullscreen" aria-label="Spiel im Vollbild öffnen" title="Vollbild">⛶</button></div>
+        <iframe id="stadtbus-game" src="spiel.html" title="Stadtbus Surfer 3 spielen" width="480" height="680" allow="fullscreen" allowfullscreen></iframe>
+        <div class="arcade-bottom"><span>WINTERTHUR EDITION</span><span>● ● ●</span></div>
+      </div>
+    </section>
+    <section class="leaderboard-section" id="bestenliste" aria-labelledby="rank-title">
+      <div class="wrap board-grid">
+        <div class="board-intro"><p class="eyebrow">DIE STADT HAT IHRE LEGENDEN.</p><h2 id="rank-title">NÄCHSTER PLATZ:<br><em>DEINER.</em></h2><p>Die längsten Fahrten aus allen Browsern. Trage nach deiner Runde deinen Spielernamen ein und sichere dir einen Platz.</p><p class="board-rule">Strecke entscheidet.<br>Bei Gleichstand zählen die Batzen.</p><span class="ticket">TOP 20 <span>↗</span></span></div>
+        <div class="board"><div class="board-top"><h3>BESTENLISTE</h3><button id="refresh-ranks" aria-label="Bestenliste aktualisieren">↻ <span>Aktualisieren</span></button></div><p class="board-status" id="board-status" role="status">Rekorde werden geladen …</p><div class="table-scroll"><table><caption class="sr-only">Die 20 besten Runden nach Strecke und Batzen</caption><thead><tr><th scope="col">Platz</th><th scope="col">Spielername</th><th scope="col" class="number">Strecke</th><th scope="col" class="number">Batzen</th></tr></thead><tbody id="scores"></tbody></table></div><p class="board-foot">Gemeinsame Rangliste · Name und Ergebnis sind öffentlich.</p></div>
+      </div>
+    </section>
+    <section class="controls wrap" id="steuerung" aria-labelledby="controls-title"><div><p class="eyebrow">KURZ VOR DER ABFAHRT</p><h2 id="controls-title">DREI MOVES.<br>VOLLE FAHRT.</h2></div><dl><div><dt><kbd>←</kbd><kbd>→</kbd><span>Spur wechseln</span></dt><dd>Mit A / D oder seitlich wischen. Busse sind zu gross zum Überspringen.</dd></div><div><dt><kbd>↑</kbd><span>Springen</span></dt><dd>Mit W, Leertaste oder nach oben wischen. Über Autos und Hindernisse.</dd></div><div><dt><kbd>↓</kbd><span>Rollen</span></dt><dd>Mit S oder nach unten wischen. Velo- und Tretboard-Fahrer wegrollen.</dd></div></dl><p class="pause-note"><kbd>P</kbd> für eine Pause. Beim Wegscrollen pausiert das Spiel automatisch.</p></section>
+  </main>
+  <footer class="wrap"><a class="brand" href="#start"><span class="line-number">3</span><span>STADTBUS<br><b>SURFER</b></span></a><p>Ein Spiel von Nicola.<br>Inspiriert von Winterthur.</p><a href="#spiel">Noch eine Runde? ↗</a></footer>
+</body></html>
