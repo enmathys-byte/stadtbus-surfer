@@ -8,7 +8,9 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 - Leertaste: springen. P: Pause.
 - Auf dem Handy im Spielfeld in die entsprechende Richtung wischen. Jeder Wisch löst genau eine Aktion aus; auch ein weiter Wisch wechselt nur eine Spur.
 - Velos und Tretboard-Fahrer werden durch Rollen besiegt.
-- Ein seltener Schraubenschlüssel ersetzt einen Batzen. Nach dem Einsammeln schwingt der Mechaniker das Werkzeug 5 Spielsekunden und besiegt Velos und Tretboard-Fahrer auch ohne Rollen. Die Anzeige zählt die Restzeit herunter; Pausen halten sie an. Autos und Busse bleiben gefährlich.
+- Seltene Extras ersetzen einen Batzen. Die bisherige Schraubenschlüssel-Chance ist halbiert: Pro geeigneter Münzreihe gibt es 4 % Chance auf einen Schraubenschlüssel und 4 % auf einen Magneten. Die Auswahl ist unabhängig und zufällig, sodass derselbe Typ auch mehrfach hintereinander erscheinen kann. Höchstens ein nicht eingesammeltes Extra liegt auf der Strasse; ein bereits aktiver Typ wird nicht erneut erzeugt.
+- Der Schraubenschlüssel wirkt 5 Spielsekunden: Der Mechaniker schwingt ihn und haut bei Kontakt alle Hindernisse in seiner Spur weg – Velos, Tretboards, Autos, Busse (auch Gelenk- und Doppelgelenkbusse) sowie Abschrankungen.
+- Der Magnet zieht 5 Spielsekunden lang nahe Münzen aus allen drei Spuren und auch aus Sprungbögen sichtbar zur Figur. Er zieht keine anderen Extras an und schützt nicht vor Hindernissen. Beide Extras können gleichzeitig wirken; getrennte Anzeigen zählen ihre Restzeit herunter. Pausen halten beide Zeiten an, eine neue Runde setzt sie zurück.
 - Dichterer Verkehr bereits ab dem Start, mit deutlich mehr Autos und Bussen als Velos und Tretboards. Alle 500 Meter nimmt die Verkehrsdichte weiter zu.
 - Zehn Automodelle: Kleinwagen, Limousine, SUV, Lieferwagen, Taxi, Kombi mit Dachreling, Sportwagen mit Streifen und Heckspoiler, Cabrio mit offenen Sitzen, Pickup mit Ladefläche und Minivan.
 - Nach der Runde einen Spielernamen eingeben und das Ergebnis speichern.
