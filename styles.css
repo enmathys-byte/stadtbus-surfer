@@ -4,7 +4,7 @@
 @media(max-width:390px){.wrap{width:calc(100% - 24px)}.arcade iframe{height:550px}.arcade-top{font-size:8px;padding:0 8px}.board-top h3{font-size:22px}.board-top button span{display:none}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}}
 .topbar{padding-top:14px;padding-bottom:14px}
-.game-section{display:grid;justify-items:center;padding-top:18px;padding-bottom:36px}
-.game-section .arcade{justify-self:center}
+.game-section{display:grid;justify-items:center;padding-block:40px}
+.game-section .arcade{justify-self:center;margin-inline:auto}
 .game-section .arcade iframe{height:clamp(480px,calc(100svh - 190px),680px)}
-@media(max-width:740px){.game-section{padding-top:14px;padding-bottom:28px}}
+@media(max-width:740px){.game-section{padding-block:28px}}
