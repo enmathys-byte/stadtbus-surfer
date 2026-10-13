@@ -6,16 +6,16 @@ Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und
 
 - Pfeiltasten oder WASD: Spur wechseln, springen und rollen.
 - Leertaste: springen. P: Pause.
-- Auf dem Handy im Spielfeld in die entsprechende Richtung wischen.
+- Auf dem Handy im Spielfeld in die entsprechende Richtung wischen. Jeder Wisch löst genau eine Aktion aus; auch ein weiter Wisch wechselt nur eine Spur.
 - Velos und Tretboard-Fahrer werden durch Rollen besiegt.
 - Alle 500 Meter nimmt die Verkehrsdichte zu.
 - Nach der Runde einen Spielernamen eingeben und das Ergebnis speichern.
 
 ## Winterthurer Kulisse
 
-- HESS-Gelenkbusse mit zwei und Doppelgelenkbusse mit drei getrennten Fahrzeugteilen und gerippten Faltenbälgen, ohne Stromabnehmerstangen.
+- Normale Stadtbusse sowie HESS-Gelenkbusse mit zwei und Doppelgelenkbusse mit drei getrennten Fahrzeugteilen und gerippten Faltenbälgen, ohne Stromabnehmerstangen. Für die Spielschwierigkeit sind die Gelenkbusse exakt doppelt und Doppelgelenkbusse dreimal so lang wie normale Busse (einschliesslich Kollisionslänge).
 - Blaue Haltestellentafeln mit silbernem Rahmen, farbigen Linienfeldern und Winterthurer Namen, unter anderem Feldtal, Schiltwiesen, Technikum und Stadthaus.
-- Ein stilisiertes Pilzdach am Hauptbahnhof ersetzt den dunklen Block am Strassenende.
+- Ein stilisiertes Pilzdach am Hauptbahnhof ersetzt den dunklen Block am Strassenende. Es liegt hinter allen Häusern im Hintergrund.
 - Haltestellen und Wartehäuschen liegen in der Zeichenreihenfolge vor den Hausfassaden und bleiben bis zum Vorbeifahren sichtbar.
 
 Die Kulisse ist spielerisch stilisiert. Vorlagen: [Stadtbus-Fahrzeugpark](https://stadtbus.winterthur.ch/fahrerlebnis/fahrzeugpark), [offizielle Situationspläne](https://stadtbus.winterthur.ch/service/situationsplaene), [Haltestellentafel Feldtal](https://autobusse.startbilder.de/bild/schweiz~kt-zuerich~winterthur/749734/206663---sbw-haltestellenschild---winterthur-feldtal.html) und [Pilzdach am Bahnhofplatz](https://www.nau.ch/ort/winterthur/neue-wartehalle-am-hauptbahnhof-winterthur-eroffnet-67125150). Die Grafiken werden im Canvas gezeichnet; Referenzfotos sind nicht eingebunden.
