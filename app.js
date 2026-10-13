@@ -49,6 +49,5 @@
     try{if(document.fullscreenElement)await document.exitFullscreen();else if(arcade.requestFullscreen)await arcade.requestFullscreen();else {arcade.scrollIntoView({block:'start'});game.focus();}}catch{game.focus();}
   });
   document.addEventListener('fullscreenchange',()=>{document.getElementById('fullscreen').setAttribute('aria-label',document.fullscreenElement?'Vollbild verlassen':'Spiel im Vollbild öffnen');});
-  document.getElementById('play-link').addEventListener('click',()=>game.focus({preventScroll:true}));
   loadScores();
 })();

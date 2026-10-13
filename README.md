@@ -2,6 +2,8 @@
 
 Eine eigenständige Winterthur-Homepage mit Stadtbus Surfer 3, Vollbildmodus und gemeinsamer Top-20-Bestenliste.
 
+Die Seite beginnt direkt mit dem zentrierten Spiel unter der kompakten Navigation. Darunter folgen Bestenliste und Spielanleitung. Als Ersteller steht im Fussbereich „Anonymous“.
+
 ## Spielen
 
 - Pfeiltasten oder WASD: Spur wechseln, springen und rollen.
